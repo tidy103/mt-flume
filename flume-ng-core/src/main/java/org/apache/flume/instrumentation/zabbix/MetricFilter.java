@@ -16,26 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.flume.instrumentation.zabbix;
 
-package org.apache.flume.instrumentation;
+import java.util.HashSet;
+import java.util.Set;
 
-/**
- * Enum for Monitoring types.
- */
-public enum MonitoringType {
-  OTHER(null),
-  GANGLIA(org.apache.flume.instrumentation.GangliaServer.class),
-  ZABBIX(org.apache.flume.instrumentation.zabbix.ZabbixServer.class),
-  HTTP(org.apache.flume.instrumentation.http.HTTPMetricsServer.class);
-  
+public class MetricFilter {
+    
+    
+    private static Set<String> filteredMetricNameSet = new HashSet<String>();
+    
+    static{
+        filteredMetricNameSet.add("Type");
+        filteredMetricNameSet.add("StopTime");
+        filteredMetricNameSet.add("StartTime");
+    }
+    
+    public static boolean isFiltered(String metricName){
+        
+        return filteredMetricNameSet.contains(metricName);
+    }
 
-  private Class<? extends MonitorService> monitoringClass;
-
-  private MonitoringType(Class<? extends MonitorService> klass) {
-    this.monitoringClass = klass;
-  }
-
-  public Class<? extends MonitorService> getMonitorClass(){
-    return this.monitoringClass;
-  }
 }

@@ -47,7 +47,8 @@ public abstract class AbstractSinkProcessor implements SinkProcessor {
   @Override
   public void stop() {
     for(Sink s : sinkList) {
-      s.start();
+      //s.start();
+      s.stop(); //modify by judasheng, FLUME-1718
     }
     state = LifecycleState.STOP;
   }

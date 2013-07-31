@@ -141,6 +141,13 @@ public class ScribeSource extends AbstractSource implements
   class Receiver implements Iface {
 
     public ResultCode Log(List<LogEntry> list) throws TException {
+      if (list == null) {
+        return ResultCode.TRY_LATER;
+      }
+      if (list.size() == 0) {
+        return ResultCode.OK;
+      }
+        
       if (list != null) {
         sourceCounter.addToEventReceivedCount(list.size());
 

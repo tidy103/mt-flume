@@ -46,6 +46,8 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.hadoop.compression.lzo.LzoIndexer;
+
 import com.google.common.base.Throwables;
 
 /**
@@ -486,6 +488,12 @@ class BucketWriter {
         if(fileSystem.exists(srcPath)) { // could block
           LOG.info("Renaming " + srcPath + " to " + dstPath);
           fileSystem.rename(srcPath, dstPath); // could block
+
+          //index the dstPath lzo file, add by judasheng
+          if (codeC != null && ".lzo".equals(codeC.getDefaultExtension()) ) {
+              LzoIndexer lzoIndexer = new LzoIndexer(new Configuration());
+              lzoIndexer.index(dstPath);
+          }
         }
         return null;
       }

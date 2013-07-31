@@ -65,6 +65,12 @@ limitations under the License.
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
     </dependency>
+    
+    <dependency>
+      <groupId>hadoop-lzo</groupId>
+      <artifactId>hadoop-lzo</artifactId>
+      <version>0.4.15</version>
+    </dependency>
 
     <dependency>
       <groupId>junit</groupId>
@@ -170,5 +176,12 @@ limitations under the License.
     </profile>
 
   </profiles>
+
+  <repositories>
+     <repository>
+         <id>clojars</id>
+         <url>http://clojars.org/repo/</url>
+     </repository>
+  </repositories>
 
 </project>
