@@ -93,6 +93,8 @@ class BucketWriter {
   private volatile boolean isOpen;
   private volatile boolean isUnderReplicated;
   private volatile int consecutiveUnderReplRotateCount = 0;
+  private volatile int flushFailureCount = 0;
+  private volatile int maxFlushFailureCount = 10;
   private volatile ScheduledFuture<Void> timedRollFuture;
   private SinkCounter sinkCounter;
   private final int idleTimeout;
@@ -355,7 +357,17 @@ class BucketWriter {
     callWithTimeout(new CallRunner<Void>() {
       @Override
       public Void call() throws Exception {
-        writer.sync(); // could block
+        if(flushFailureCount < maxFlushFailureCount){
+          try{
+            writer.sync(); // could block
+          }catch(IOException ex){
+              flushFailureCount ++;
+              LOG.warn("doFlush failed, current failure count :" + flushFailureCount);
+              throw ex;
+          }
+        }else{
+          LOG.error("Hit max flush failure count, will not do flush any more, max flush failure count : " + maxFlushFailureCount);
+        }
         return null;
       }
     });
@@ -406,8 +418,10 @@ class BucketWriter {
         consecutiveUnderReplRotateCount = 0;
       }
 
-      if (doRotate) {
+      if (doRotate || flushFailureCount >= maxFlushFailureCount) {
         close();
+        // reset flush failure count when open new file
+        flushFailureCount = 0;
         open();
       }
     }
