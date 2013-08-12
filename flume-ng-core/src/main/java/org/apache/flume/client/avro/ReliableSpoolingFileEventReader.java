@@ -394,7 +394,13 @@ public class ReliableSpoolingFileEventReader implements ReliableEventReader {
         return true;
       }
     };
-    List<File> candidateFiles = Arrays.asList(spoolDirectory.listFiles(filter));
+
+    //judasheng modify bug NPE
+    File[] childrens = spoolDirectory.listFiles(filter);
+    List<File> candidateFiles = new ArrayList();
+    if (childrens != null) {
+        candidateFiles = Arrays.asList(childrens);
+    }
     if (candidateFiles.isEmpty()) {
       return Optional.absent();
     } else {

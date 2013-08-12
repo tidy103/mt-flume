@@ -155,7 +155,6 @@ Configurable, EventDrivenSource {
 
     @Override
     public void run() {
-      logger.info("SpoolDirectorySource new thread running");
       try {
         while (true) {
           List<Event> events = reader.readEvents(batchSize);
@@ -171,7 +170,6 @@ Configurable, EventDrivenSource {
           sourceCounter.incrementAppendBatchAcceptedCount();
         }
       } catch (Throwable t) {
-        logger.info("SpoolDirectorySource thread end");
         logger.error("Uncaught exception in Runnable", t);
         if (t instanceof Error) {
           throw (Error) t;
