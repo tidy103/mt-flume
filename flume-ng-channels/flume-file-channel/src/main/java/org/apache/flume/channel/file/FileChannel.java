@@ -46,6 +46,7 @@ import java.util.Arrays;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.Date;
 
 /**
  * <p>
@@ -536,6 +537,9 @@ public class FileChannel extends BasicChannelSemantics {
                   + channelNameDescriptor);
               log.take(transactionID, ptr); // write take to disk
               Event event = log.get(ptr);
+              //modify by judasheng, event put to hdfs should on cur partition
+              event.getHeaders().put("timestamp", 
+                        Long.valueOf((new Date().getTime())).toString());
               return event;
             } catch (IOException e) {
               throw new ChannelException("Take failed due to IO error "
