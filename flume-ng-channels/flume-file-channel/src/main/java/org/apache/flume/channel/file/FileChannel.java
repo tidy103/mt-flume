@@ -344,7 +344,7 @@ public class FileChannel extends BasicChannelSemantics {
   }
 
   @Override
-  protected BasicTransactionSemantics createTransaction() {
+  public BasicTransactionSemantics createTransaction() {
     if(!open) {
       String msg = "Channel closed " + channelNameDescriptor;
       if(startupError != null) {

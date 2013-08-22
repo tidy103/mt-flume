@@ -46,7 +46,9 @@ public class ChannelConfiguration extends ComponentConfiguration {
      */
     JDBC("org.apache.flume.conf.channel.JdbcChannelConfiguration"),
     
-    NULL("org.apache.flume.conf.channel.MemoryChannelConfiguration");
+    NULL("org.apache.flume.conf.channel.MemoryChannelConfiguration"),
+    
+    DUAL("org.apache.flume.conf.channel.DualChannelConfiguration");
 
     private String channelConfigurationType;
 
