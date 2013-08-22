@@ -1058,6 +1058,11 @@ limitations under the License.
         <version>4.3.0</version>
       </dependency>
 
+      <dependency>
+      	<groupId>org.apache.flume.flume-ng-channels</groupId>
+      	<artifactId>flume-dual-channel</artifactId>
+      	<version>1.4.0</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -1100,11 +1105,4 @@ limitations under the License.
     </plugins>
   </reporting>
 
-  <dependencies>
-  	<dependency>
-  		<groupId>org.apache.flume.flume-ng-channels</groupId>
-  		<artifactId>flume-dual-channel</artifactId>
-  		<version>1.4.0</version>
-  	</dependency>
-  </dependencies>
 </project>
