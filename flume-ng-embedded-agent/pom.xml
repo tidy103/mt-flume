@@ -54,6 +54,11 @@ limitations under the License.
       <groupId>org.apache.flume.flume-ng-channels</groupId>
       <artifactId>flume-file-channel</artifactId>
     </dependency>
+    
+    <dependency>
+      <groupId>org.apache.flume.flume-ng-channels</groupId>
+      <artifactId>flume-dual-channel</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>junit</groupId>
