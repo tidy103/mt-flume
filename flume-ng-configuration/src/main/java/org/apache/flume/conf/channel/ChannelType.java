@@ -44,7 +44,18 @@ public enum ChannelType {
   /**
    * JDBC channel provided by org.apache.flume.channel.jdbc.JdbcChannel
    */
-  JDBC("org.apache.flume.channel.jdbc.JdbcChannel");
+  JDBC("org.apache.flume.channel.jdbc.JdbcChannel"),
+  
+  /**
+   * Null channel provided by org.apache.flume.channel.NullChannel
+   */
+  NULL("org.apache.flume.channel.NullChannel"),
+  
+  /**
+   * Dual channel provided by org.apache.flume.channel.DualChannel
+   */
+  DUAL("org.apache.flume.channel.DualChannel");
+
 
 
   private final String channelClassName;
