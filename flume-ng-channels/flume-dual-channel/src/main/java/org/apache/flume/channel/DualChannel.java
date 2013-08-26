@@ -23,6 +23,7 @@ import java.util.Map;
 import org.apache.flume.ChannelException;
 import org.apache.flume.Context;
 import org.apache.flume.Event;
+import org.apache.flume.annotations.Disposable;
 import org.apache.flume.annotations.InterfaceAudience;
 import org.apache.flume.annotations.InterfaceStability;
 import org.apache.flume.annotations.Recyclable;
@@ -38,11 +39,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * <p>
  * DualChannel is the mixed channel of MemoryChannel and FileChannel.
+ * Important: @InterfaceAudience.Private and @Disposable is from FileChannel, 
+ *            espically Disposable decided DualChannel created or not when reconfiguration.
  * </p>
  */
-@InterfaceAudience.Public
+@InterfaceAudience.Private
 @InterfaceStability.Stable
-@Recyclable
+@Disposable
 public class DualChannel extends BasicChannelSemantics {
   private static Logger LOG = LoggerFactory.getLogger(DualChannel.class);
 
