@@ -113,9 +113,9 @@ public class DualChannel extends BasicChannelSemantics {
 	//channelCounter.setChannelSize(queue.size());
 	//channelCounter.setChannelCapacity(Long.valueOf(
 	//            queue.size() + queue.remainingCapacity()));  
+	super.start();
 	memChannel.start();
 	fileChannel.start();
-	super.start();
   }
 
   @Override
@@ -222,7 +222,7 @@ public class DualChannel extends BasicChannelSemantics {
       fileTransaction.commit();
 
       //print stat information
-      if (handleEventCount.get() >= 10000) {
+      if (handleEventCount.get() >= 50000) {
         String msg = String.format("DualChannel-STAT name[%s] " + 
                 "totalEvent[%d] memEvent[%d] fileEvent[%d] " + 
                 "memQueueSize[%d] fileQueueSize[%d]", 
