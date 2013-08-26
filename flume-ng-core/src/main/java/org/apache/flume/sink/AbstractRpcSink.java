@@ -352,6 +352,7 @@ public abstract class AbstractRpcSink extends AbstractSink
 
       int size = batch.size();
       int batchSize = client.getBatchSize();
+      logger.info("RpcSink " + getName() + " consume " + size + ", want " + batchSize);
 
       if (size == 0) {
         sinkCounter.incrementBatchEmptyCount();
@@ -373,7 +374,7 @@ public abstract class AbstractRpcSink extends AbstractSink
       transaction.rollback();
       if (t instanceof Error) {
         throw (Error) t;
-      } else if (t instanceof ChannelException) {
+       } else if (t instanceof ChannelException) {
         logger.error("Rpc Sink " + getName() + ": Unable to get event from" +
             " channel " + channel.getName() + ". Exception follows.", t);
         status = Status.BACKOFF;

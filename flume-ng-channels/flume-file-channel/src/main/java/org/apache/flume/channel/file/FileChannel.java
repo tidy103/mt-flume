@@ -420,6 +420,11 @@ public class FileChannel extends BasicChannelSemantics {
     return log;
   }
 
+  @Override
+  public Integer getQueueSize() {
+    return capacity - queueRemaining.availablePermits();
+  }
+
   /**
    * Transaction backed by a file. This transaction supports either puts
    * or takes but not both.

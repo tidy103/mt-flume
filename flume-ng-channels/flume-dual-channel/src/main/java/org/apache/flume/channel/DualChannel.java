@@ -32,6 +32,9 @@ import org.apache.flume.instrumentation.ChannelCounter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 /**
  * <p>
  * DualChannel is the mixed channel of MemoryChannel and FileChannel.
@@ -42,18 +45,25 @@ import org.slf4j.LoggerFactory;
 @Recyclable
 public class DualChannel extends BasicChannelSemantics {
   private static Logger LOG = LoggerFactory.getLogger(DualChannel.class);
-  
+
+  /***
+   * putToMemChannel indicate put event to memChannel or fileChannel
+   * takeFromMemChannel indicate take event from memChannel or fileChannel
+   * */
+  private AtomicBoolean putToMemChannel = new AtomicBoolean(true);
+  private AtomicBoolean takeFromMemChannel = new AtomicBoolean(true);
   private MemoryChannel memChannel = new MemoryChannel();
   private final ThreadLocal<BasicTransactionSemantics> memTransactions = new ThreadLocal<BasicTransactionSemantics>();
   private FileChannel fileChannel = new FileChannel();
   private final ThreadLocal<BasicTransactionSemantics> fileTransactions = new ThreadLocal<BasicTransactionSemantics>();
   
+  private AtomicLong handleEventCount = new AtomicLong();
+  private AtomicLong memHandleEventCount = new AtomicLong();
+  private AtomicLong fileHandleEventCount = new AtomicLong();
   private ChannelCounter channelCounter;
   
   public DualChannel() {
 	super(); 
-	memChannel.setName(getName() + "-memory");
-	fileChannel.setName(getName() + "-file");
   }
 
   /**
@@ -70,6 +80,7 @@ public class DualChannel extends BasicChannelSemantics {
 	  channelCounter = new ChannelCounter(getName());
 	}
 	
+	memChannel.setName(getName() + "-memory");
 	//configure mc
 	try {
 	  Map<String, String> memoryParams = context.getSubProperties("memory.");
@@ -82,6 +93,7 @@ public class DualChannel extends BasicChannelSemantics {
         LOG.error(msg, e);
     }
 	
+	fileChannel.setName(getName() + "-file");
 	//configure fc
 	try {
 	  Map<String, String> fileParams = context.getSubProperties("file.");
@@ -136,9 +148,9 @@ public class DualChannel extends BasicChannelSemantics {
   }
   
   private class DualTransaction extends BasicTransactionSemantics {
-	BasicTransactionSemantics memTransaction;
-	BasicTransactionSemantics fileTransaction;
-	  
+	private final BasicTransactionSemantics memTransaction;
+	private final BasicTransactionSemantics fileTransaction;
+	 
     private final ChannelCounter channelCounter;
 
     public DualTransaction(BasicTransactionSemantics mt, BasicTransactionSemantics ft, 
@@ -159,13 +171,24 @@ public class DualChannel extends BasicChannelSemantics {
     @Override
     protected void doPut(Event event) throws InterruptedException {
       channelCounter.incrementEventPutAttemptCount();
+      handleEventCount.incrementAndGet();
 
-      try {
-    	  memTransaction.put(event);
-      } catch (ChannelException ce) {
-    	  LOG.warn(ce.getMessage());
-    	  fileTransaction.put(event);
-      }	  
+      if (putToMemChannel.get()) {
+        memHandleEventCount.incrementAndGet();
+    	memTransaction.put(event);
+
+        /**
+         * check whether memChannel queueRemaining to 30%, 
+         * if true, change to fileChannel next event.
+         * */
+        if ( memChannel.isFull() ) {
+          LOG.info("DualChannel " + getName() + " set put to fileChannel.");
+          putToMemChannel.set(false);
+        }
+      } else {
+    	fileHandleEventCount.incrementAndGet();
+    	fileTransaction.put(event);
+      }
     }
 
     @Override
@@ -173,9 +196,21 @@ public class DualChannel extends BasicChannelSemantics {
       channelCounter.incrementEventTakeAttemptCount();
 
       Event event = null;
-      event = memTransaction.take();
-      if (event == null) {
-    	  event = fileTransaction.take();
+      if ( takeFromMemChannel.get() ) {
+        event = memTransaction.take();
+        if (event == null) {
+          LOG.info("DualChannel " + getName() + " set take from fileChannel.");
+          takeFromMemChannel.set(false);
+        } 
+      } else {
+    	event = fileTransaction.take();
+        if (event == null) {
+          LOG.info("DualChannel " + getName() + " set take from memChannel.");
+          takeFromMemChannel.set(true);
+          
+          LOG.info("DualChannel " + getName() + " set put to memChannel.");
+          putToMemChannel.set(true);
+        } 
       }
       
       return event;
@@ -185,6 +220,20 @@ public class DualChannel extends BasicChannelSemantics {
     protected void doCommit() throws InterruptedException {
       memTransaction.commit();
       fileTransaction.commit();
+
+      //print stat information
+      if (handleEventCount.get() >= 10000) {
+        String msg = String.format("DualChannel-STAT name[%s] " + 
+                "totalEvent[%d] memEvent[%d] fileEvent[%d] " + 
+                "memQueueSize[%d] fileQueueSize[%d]", 
+                getName(), handleEventCount.get(), 
+                memHandleEventCount.get(), fileHandleEventCount.get(),
+                memChannel.getQueueSize(), fileChannel.getQueueSize());
+         LOG.info(msg); 
+         handleEventCount.set(0);
+         memHandleEventCount.set(0);
+         fileHandleEventCount.set(0);
+      }
     }
 
     @Override

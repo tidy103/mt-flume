@@ -74,6 +74,7 @@ public class MemoryChannel extends BasicChannelSemantics {
       channelCounter = counter;
     }
 
+
     @Override
     protected void doPut(Event event) throws InterruptedException {
       channelCounter.incrementEventPutAttemptCount();
@@ -198,6 +199,7 @@ public class MemoryChannel extends BasicChannelSemantics {
   // like we would if we tried to use a blocking call on queue
   private Semaphore queueStored;
   // maximum items in a transaction queue
+  private volatile Integer capacity;
   private volatile Integer transCapacity;
   private volatile int keepAlive;
   private volatile int byteCapacity;
@@ -221,7 +223,6 @@ public class MemoryChannel extends BasicChannelSemantics {
    */
   @Override
   public void configure(Context context) {
-    Integer capacity = null;
     try {
       capacity = context.getInteger("capacity", defaultCapacity);
     } catch(NumberFormatException e) {
@@ -369,5 +370,15 @@ public class MemoryChannel extends BasicChannelSemantics {
     }
     //Each event occupies at least 1 slot, so return 1.
     return 1;
+  }
+    
+  @Override
+  public Integer getQueueSize() {
+    return capacity - queueRemaining.availablePermits();
+  }
+  
+  @Override
+  public boolean isFull() {
+    return ((queueRemaining.availablePermits()/(float)capacity) <= 0.3);
   }
 }

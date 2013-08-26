@@ -124,4 +124,12 @@ public abstract class BasicChannelSemantics extends AbstractChannel {
     }
     return transaction;
   }
+
+  public Integer getQueueSize() {
+    return 0;
+  }
+
+  public boolean isFull() {
+    return false;
+  }
 }
