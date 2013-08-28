@@ -93,6 +93,8 @@ class BucketWriter {
   private volatile boolean isOpen;
   private volatile boolean isUnderReplicated;
   private volatile int consecutiveUnderReplRotateCount = 0;
+  private volatile int hdfsFailCount = 0;
+  private volatile int maxHdfsFailCount = 10;
   private volatile ScheduledFuture<Void> timedRollFuture;
   private SinkCounter sinkCounter;
   private final int idleTimeout;
@@ -179,6 +181,8 @@ class BucketWriter {
     eventCounter = 0;
     processSize = 0;
     batchCounter = 0;
+    // reset fail count
+    hdfsFailCount = 0;
   }
 
   /**
@@ -254,7 +258,7 @@ class BucketWriter {
           LOG.debug("Rolling file ({}): Roll scheduled after {} sec elapsed.",
               bucketPath, rollInterval);
           try {
-            close();
+            graceClose();
           } catch(Throwable t) {
             LOG.error("Unexpected error", t);
           }
@@ -310,6 +314,33 @@ class BucketWriter {
     }
   }
 
+  
+/**
+ * try to close file, if failed too many times, just ignore  
+ * @throws IOException
+ * @throws InterruptedException
+ */
+private void graceClose() throws IOException, InterruptedException{
+  
+  try{
+    close();
+  }catch(IOException e){
+    hdfsFailCount ++;
+    if(hdfsFailCount < maxHdfsFailCount){
+      LOG.error("Closing hdfs file failed, current failed count : " + hdfsFailCount);
+      throw e;
+    }else{
+      isOpen = false;
+      if (timedRollFuture != null && !timedRollFuture.isDone()) {
+        timedRollFuture.cancel(false); // do not cancel myself if running!
+        timedRollFuture = null;
+      }
+      LOG.error("Hit max hdfs failed count, ignore the failed file, open new file");
+    }
+  }
+}
+
+
   /**
    * flush the data
    * @throws IOException
@@ -330,7 +361,7 @@ class BucketWriter {
                 if(isOpen) {
                   LOG.info("Closing idle bucketWriter {}", bucketPath);
                   idleClosed = true;
-                  close();
+                  graceClose();
                 }
                 if(onIdleCallback != null)
                   onIdleCallback.run(onIdleCallbackPath);
@@ -407,7 +438,7 @@ class BucketWriter {
       }
 
       if (doRotate) {
-        close();
+        graceClose();
         open();
       }
     }
@@ -427,7 +458,7 @@ class BucketWriter {
           bucketPath + ") and rethrowing exception.",
           e.getMessage());
       try {
-        close();
+        graceClose();
       } catch (IOException e2) {
         LOG.warn("Caught IOException while closing file (" +
              bucketPath + "). Exception follows.", e2);
