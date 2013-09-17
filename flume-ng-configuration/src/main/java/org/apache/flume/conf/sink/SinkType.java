@@ -57,6 +57,11 @@ public enum SinkType {
   /**
    * IRC Sink provided by org.apache.flume.sink.irc.IRCSink
    */
+  RABBITMQ("org.apache.flume.sink.rabbitmq.RabbitMQSink"),
+  
+  /**
+   * IRC Sink provided by org.apache.flume.sink.irc.IRCSink
+   */
   IRC("org.apache.flume.sink.irc.IRCSink"),
 
   /**

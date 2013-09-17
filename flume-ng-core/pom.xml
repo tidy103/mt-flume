@@ -377,6 +377,12 @@ limitations under the License.
       <artifactId>mina-core</artifactId>
     </dependency>
 
+	<dependency>
+		<groupId>com.rabbitmq</groupId>
+		<artifactId>amqp-client</artifactId>
+		<version>2.8.2</version>
+	</dependency>
+
   </dependencies>
 
 </project>
