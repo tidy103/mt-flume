@@ -19,16 +19,12 @@
 
 package org.apache.flume.sink.rabbitmq;
 
-import com.rabbitmq.client.BasicProperties;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.impl.AMQBasicProperties;
 import org.apache.flume.*;
 import org.apache.flume.conf.Configurable;
 import org.apache.flume.sink.AbstractSink;
-import org.apache.flume.util.RabbitMQConstants;
-import org.apache.flume.util.RabbitMQUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

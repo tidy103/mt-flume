@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.flume.util;
+package org.apache.flume.sink.rabbitmq;
 
 import java.util.Date;
 import java.util.Map;
