@@ -102,6 +102,11 @@ public class SinkConfiguration extends ComponentConfiguration {
     HDFS("org.apache.flume.conf.sink.HDFSSinkConfiguration"),
 
     /**
+     * rabbit Sink provided by org.apache.flume.sink.RabbitMQSinkConfiguration
+     */
+    RABBITMQ("org.apache.flume.conf.sink.RabbitMQSinkConfiguration"),
+    
+    /**
      * IRC Sink provided by org.apache.flume.sink.irc.IRCSink
      */
     IRC("org.apache.flume.conf.sink.IRCSinkConfiguration"),
