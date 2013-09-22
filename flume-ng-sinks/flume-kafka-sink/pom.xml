@@ -41,15 +41,6 @@ limitations under the License.
 	</repository>
   </repositories>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.rat</groupId>
-        <artifactId>apache-rat-plugin</artifactId>
-      </plugin>
-    </plugins>
-  </build>
-
   <dependencies>
 
     <dependency>

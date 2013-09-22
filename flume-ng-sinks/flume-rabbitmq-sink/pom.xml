@@ -30,15 +30,6 @@ limitations under the License.
   <artifactId>flume-rabbitmq-sink</artifactId>
   <name>Flume NG RabbitMQ Sink</name>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.rat</groupId>
-        <artifactId>apache-rat-plugin</artifactId>
-      </plugin>
-    </plugins>
-  </build>
-
   <dependencies>
 
     <dependency>
