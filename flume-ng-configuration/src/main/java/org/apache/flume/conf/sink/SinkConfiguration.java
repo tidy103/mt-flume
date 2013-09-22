@@ -104,7 +104,12 @@ public class SinkConfiguration extends ComponentConfiguration {
     /**
      * rabbit Sink provided by org.apache.flume.sink.RabbitMQSinkConfiguration
      */
-    RABBITMQ(null),
+    RABBITMQ("org.apache.flume.conf.sink.RabbitMQSinkConfiguration"),
+    
+    /**
+     * kafka Sink provided by org.apache.flume.sink.KafkaSinkConfiguration
+     */
+    KAFKA("org.apache.flume.conf.sink.KafkaSinkConfiguration"),
     
     /**
      * IRC Sink provided by org.apache.flume.sink.irc.IRCSink

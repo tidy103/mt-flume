@@ -47,5 +47,6 @@ limitations under the License.
     <module>flume-ng-elasticsearch-sink</module>
     <module>flume-ng-morphline-solr-sink</module>
     <module>flume-rabbitmq-sink</module>
+    <module>flume-kafka-sink</module>
   </modules>
 </project>

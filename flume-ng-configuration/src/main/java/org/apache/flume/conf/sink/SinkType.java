@@ -55,9 +55,14 @@ public enum SinkType {
   HDFS("org.apache.flume.sink.hdfs.HDFSEventSink"),
 
   /**
-   * IRC Sink provided by org.apache.flume.sink.irc.IRCSink
+   * RABBITMQ Sink provided by org.apache.flume.sink.irc.IRCSink
    */
   RABBITMQ("org.apache.flume.sink.rabbitmq.RabbitMQSink"),
+  
+  /**
+   * kafka Sink provided by org.apache.flume.sink.irc.IRCSink
+   */
+  KAFKA("org.apache.flume.sink.kafka.KafkaSink"),
   
   /**
    * IRC Sink provided by org.apache.flume.sink.irc.IRCSink
