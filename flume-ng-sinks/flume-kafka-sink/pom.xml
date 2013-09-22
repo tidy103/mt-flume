@@ -40,6 +40,15 @@ limitations under the License.
 		<url>http://clojars.org/repo</url>
 	</repository>
   </repositories>
+  
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>apache-rat-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </build>
 
   <dependencies>
 
