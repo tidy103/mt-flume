@@ -81,7 +81,9 @@ public class KafkaSink extends AbstractSink implements Configurable {
     @Override
     public synchronized void stop() {
         super.stop();
-        producer.close();
+        if (producer != null) {
+        	producer.close();
+        }
     }
 
     @Override
