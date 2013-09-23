@@ -71,9 +71,9 @@ public class KafkaSink extends AbstractSink implements Configurable {
 		props.put("serializer.class", this.serializerClass);
 		props.put("zk.connect", this.zkConnect);
 		props.put("producer.type", this.producerType);
-		props.put("batch.size", this.batchSize);
-		props.put("zk.sessiontimeout.ms", this.zkTimeout);
-		props.put("queue.size", this.queueSize);
+		props.put("batch.size", String.valueOf(this.batchSize));
+		props.put("zk.sessiontimeout.ms", String.valueOf(this.zkTimeout));
+		props.put("queue.size", String.valueOf(this.queueSize));
 
 		producer = new Producer<String, String>(new ProducerConfig(props));
     }
