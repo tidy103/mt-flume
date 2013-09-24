@@ -181,10 +181,10 @@ public class DualChannel extends BasicChannelSemantics {
     	memTransaction.put(event);
 
         /**
-         * check whether memChannel queueRemaining to 30%, 
+         * check whether memChannel queueRemaining to 30%, or fileChannel has event? 
          * if true, change to fileChannel next event.
          * */
-        if ( memChannel.isFull() ) {
+        if ( memChannel.isFull() || fileChannel.getQueueSize() > 100) {
           LOG.info("DualChannel " + getName() + " set put to fileChannel.");
           putToMemChannel.set(false);
         }
