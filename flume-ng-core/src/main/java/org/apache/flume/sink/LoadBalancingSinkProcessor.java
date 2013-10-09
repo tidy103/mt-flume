@@ -81,6 +81,7 @@ public class LoadBalancingSinkProcessor extends AbstractSinkProcessor {
   public static final String CONFIG_SELECTOR = "selector";
   public static final String CONFIG_SELECTOR_PREFIX = CONFIG_SELECTOR + ".";
   public static final String CONFIG_BACKOFF = "backoff";
+  public static final String CONFIG_SWITCHON = "switchon";
 
   public static final String SELECTOR_NAME_ROUND_ROBIN = "ROUND_ROBIN";
   public static final String SELECTOR_NAME_RANDOM = "RANDOM";
@@ -91,6 +92,8 @@ public class LoadBalancingSinkProcessor extends AbstractSinkProcessor {
       .getLogger(LoadBalancingSinkProcessor.class);
 
   private SinkSelector selector;
+  
+  private Boolean switchon = true;
 
   @Override
   public void configure(Context context) {
@@ -102,6 +105,8 @@ public class LoadBalancingSinkProcessor extends AbstractSinkProcessor {
         SELECTOR_NAME_ROUND_ROBIN);
 
     Boolean shouldBackOff = context.getBoolean(CONFIG_BACKOFF, false);
+    
+    switchon = context.getBoolean(CONFIG_SWITCHON, true);
 
     selector = null;
 
@@ -147,6 +152,11 @@ public class LoadBalancingSinkProcessor extends AbstractSinkProcessor {
   public Status process() throws EventDeliveryException {
     Status status = null;
 
+    //if processer is switch off, then just return
+    if ( !switchon ) {
+    	return Status.READY;
+    }
+    
     Iterator<Sink> sinkIterator = selector.createSinkIterator();
     while (sinkIterator.hasNext()) {
       Sink sink = sinkIterator.next();

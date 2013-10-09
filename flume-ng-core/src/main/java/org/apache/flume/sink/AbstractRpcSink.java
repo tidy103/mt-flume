@@ -352,7 +352,6 @@ public abstract class AbstractRpcSink extends AbstractSink
 
       int size = batch.size();
       int batchSize = client.getBatchSize();
-      logger.info("RpcSink " + getName() + " consume " + size + ", want " + batchSize);
 
       if (size == 0) {
         sinkCounter.incrementBatchEmptyCount();
