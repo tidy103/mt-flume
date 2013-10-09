@@ -155,6 +155,10 @@ public class LoadBalancingSinkProcessor extends AbstractSinkProcessor {
     //if processer is switch off, then just return
     if ( !switchon ) {
     	LOGGER.warn("SinkProcesser is set off, not call sink process.");
+    	try {
+			Thread.sleep(500);
+		} catch (InterruptedException e) {
+		}
     	return Status.READY;
     }
     
