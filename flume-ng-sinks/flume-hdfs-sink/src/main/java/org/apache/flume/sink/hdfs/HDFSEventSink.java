@@ -140,6 +140,16 @@ public class HDFSEventSink extends AbstractSink implements Configurable {
   private volatile int idleTimeout;
   private Clock clock;
 
+  private boolean switchon = true;
+  
+  //stat
+  private static long STAT_EVENT_COUNT_THRESHOLD = 100000;
+  private long statEventCount = 0;
+  private long statTakeTime = 0;
+  private long statAppendTime = 0;
+  private long statSyncTime = 0;
+  private long statAllTime = 0;
+  
   /*
    * Extended Java LinkedHashMap for open file handle LRU queue.
    * We want to clear the oldest file handle if there are too many open ones.
@@ -275,6 +285,8 @@ public class HDFSEventSink extends AbstractSink implements Configurable {
     if (sinkCounter == null) {
       sinkCounter = new SinkCounter(getName());
     }
+    
+    this.switchon = context.getBoolean("switchon", true);
   }
 
   private static boolean codecMatches(Class<? extends CompressionCodec> cls,
@@ -340,17 +352,32 @@ public class HDFSEventSink extends AbstractSink implements Configurable {
    * This method is not thread safe.
    */
   public Status process() throws EventDeliveryException {
+	//if sink is switch off, then just return
+	if ( !this.switchon ) {
+    	LOG.warn("HdfsSink is set off, just return.");
+    	try {
+			Thread.sleep(500);
+		} catch (InterruptedException e) {
+		}
+		return Status.READY;
+	}
+	
+	long t1 = System.currentTimeMillis();
+	long t2 = System.currentTimeMillis();
+	  
     Channel channel = getChannel();
     Transaction transaction = channel.getTransaction();
     List<BucketWriter> writers = Lists.newArrayList();
-    
-    long t1 = System.currentTimeMillis();
-    
     transaction.begin();
+    long tStart = 0;
+    long tEnd = 0;
     try {
       int txnEventCount = 0;
       for (txnEventCount = 0; txnEventCount < batchSize; txnEventCount++) {
+    	tStart = System.currentTimeMillis(); //stat start 
         Event event = channel.take();
+        tEnd = System.currentTimeMillis(); //stat end
+        statTakeTime += tEnd - tStart;
         if (event == null) {
           break;
         }
@@ -392,7 +419,10 @@ public class HDFSEventSink extends AbstractSink implements Configurable {
         }
 
         // Write the data to HDFS
+        tStart = System.currentTimeMillis(); //stat start 
         bucketWriter.append(event);
+        tEnd = System.currentTimeMillis(); //stat end
+        statAppendTime += tEnd - tStart;
       }
 
       if (txnEventCount == 0) {
@@ -402,25 +432,31 @@ public class HDFSEventSink extends AbstractSink implements Configurable {
       } else {
         sinkCounter.incrementBatchUnderflowCount();
       }
+      statEventCount += txnEventCount;
 
-      long t2 = System.currentTimeMillis();
-      
       // flush all pending buckets before committing the transaction
+      tStart = System.currentTimeMillis(); //stat start 
       for (BucketWriter bucketWriter : writers) {
         bucketWriter.flush();
       }
+      tEnd = System.currentTimeMillis(); //stat end
+      statSyncTime += tEnd - tStart;
 
-      long t3 = System.currentTimeMillis();
-      
       transaction.commit();
       
-      long t4 = System.currentTimeMillis();
-      LOG.info("TimeStat eventcount["+txnEventCount+"] "
-    		  +"all["+(t4-t1)+"] "
-    		  +"read_append["+(t2-t1)+"] "
-    		  +"flush["+(t3-t2)+"] "
-    		  +"commit["+(t4-t3)+"]");
+      t2 = System.currentTimeMillis();
+      statAllTime += t2 - t1;
       
+      //print stat info
+      if (statEventCount >= STAT_EVENT_COUNT_THRESHOLD) {
+	      LOG.info("TimeStat eventcount["+statEventCount+"] all["+statAllTime+"] "
+	    		  +"take["+statTakeTime+"] append["+statAppendTime+"] sync["+statSyncTime+"]");
+	      statEventCount = 0;
+	      statAllTime = 0;
+	      statTakeTime = 0;
+	      statAppendTime = 0;
+	      statSyncTime = 0;
+      }
 
       if (txnEventCount < 1) {
         return Status.BACKOFF;
