@@ -20,13 +20,11 @@ package org.apache.flume.channel;
 
 import java.util.Map;
 
-import org.apache.flume.ChannelException;
 import org.apache.flume.Context;
 import org.apache.flume.Event;
 import org.apache.flume.annotations.Disposable;
 import org.apache.flume.annotations.InterfaceAudience;
 import org.apache.flume.annotations.InterfaceStability;
-import org.apache.flume.annotations.Recyclable;
 import org.apache.flume.channel.file.FileChannel;
 import org.apache.flume.conf.Configurables;
 import org.apache.flume.instrumentation.ChannelCounter;
@@ -185,7 +183,6 @@ public class DualChannel extends BasicChannelSemantics {
          * if true, change to fileChannel next event.
          * */
         if ( memChannel.isFull() || fileChannel.getQueueSize() > 100) {
-          LOG.info("DualChannel " + getName() + " set put to fileChannel.");
           putToMemChannel.set(false);
         }
       } else {
@@ -202,16 +199,13 @@ public class DualChannel extends BasicChannelSemantics {
       if ( takeFromMemChannel.get() ) {
         event = memTransaction.take();
         if (event == null) {
-          LOG.info("DualChannel " + getName() + " set take from fileChannel.");
           takeFromMemChannel.set(false);
         } 
       } else {
     	event = fileTransaction.take();
         if (event == null) {
-          LOG.info("DualChannel " + getName() + " set take from memChannel.");
           takeFromMemChannel.set(true);
           
-          LOG.info("DualChannel " + getName() + " set put to memChannel.");
           putToMemChannel.set(true);
         } 
       }
