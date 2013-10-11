@@ -343,6 +343,9 @@ public class HDFSEventSink extends AbstractSink implements Configurable {
     Channel channel = getChannel();
     Transaction transaction = channel.getTransaction();
     List<BucketWriter> writers = Lists.newArrayList();
+    
+    long t1 = System.currentTimeMillis();
+    
     transaction.begin();
     try {
       int txnEventCount = 0;
@@ -400,12 +403,24 @@ public class HDFSEventSink extends AbstractSink implements Configurable {
         sinkCounter.incrementBatchUnderflowCount();
       }
 
+      long t2 = System.currentTimeMillis();
+      
       // flush all pending buckets before committing the transaction
       for (BucketWriter bucketWriter : writers) {
         bucketWriter.flush();
       }
 
+      long t3 = System.currentTimeMillis();
+      
       transaction.commit();
+      
+      long t4 = System.currentTimeMillis();
+      LOG.info("TimeStat eventcount["+txnEventCount+"] "
+    		  +"all["+(t4-t1)+"] "
+    		  +"read_append["+(t2-t1)+"] "
+    		  +"flush["+(t3-t2)+"] "
+    		  +"commit["+(t4-t3)+"]");
+      
 
       if (txnEventCount < 1) {
         return Status.BACKOFF;
