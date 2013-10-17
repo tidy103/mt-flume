@@ -184,6 +184,7 @@ public class RollingFileSink extends AbstractSink implements Configurable {
       }
       
       try {
+    	outputStream.flush();
 		pathController.createCurrentSymbolicFile();
 	  } catch (IOException e) {
 		Log.warn("create symbolic file to current error." + e.getMessage());
