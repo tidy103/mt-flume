@@ -61,8 +61,15 @@ public class PathManager {
 		//1. delete
 		newLinkFile.deleteOnExit();
 		//2. create new
-		ProcessBuilder proc = new ProcessBuilder("ln -s " + target + " " + newLink); 
-		proc.start();
+		ProcessBuilder pb = new ProcessBuilder("ln -s " + target + " " + newLink); 
+		Process proc = pb.start();
+        try {
+            int exitValue = proc.waitFor();
+    		if (exitValue != 0) {
+    			throw new IOException("create symbolic file error.");
+    		}
+        } catch (InterruptedException e) {
+        }
 	}
   }
 
