@@ -20,12 +20,14 @@
 package org.apache.flume.formatter.output;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class PathManager {
 
   private long seriesTimestamp;
   private File baseDirectory;
+  private String filePrefix;
   private AtomicInteger fileIndex;
 
   private File currentFile;
@@ -36,8 +38,8 @@ public class PathManager {
   }
 
   public File nextFile() {
-    currentFile = new File(baseDirectory, seriesTimestamp + "-"
-        + fileIndex.incrementAndGet());
+    currentFile = new File(baseDirectory, 
+    		filePrefix + "." + seriesTimestamp + "." + fileIndex.incrementAndGet());
 
     return currentFile;
   }
@@ -48,6 +50,24 @@ public class PathManager {
     }
 
     return currentFile;
+  }
+  
+  public void createCurrentSymbolicFile() throws IOException {
+	if (currentFile != null) {
+		String target = currentFile.getAbsolutePath();
+		File newLinkFile = new File(baseDirectory, filePrefix + "_current");
+		String newLink = newLinkFile.getAbsolutePath();
+		
+		//1. delete
+		newLinkFile.deleteOnExit();
+		//2. create new
+		Runtime rt = Runtime.getRuntime();
+		Process proc = rt.exec("ln -s " + target + " " + newLink);
+		int exitVal = proc.exitValue();
+		if (exitVal != 0) {
+			throw new IOException("exec return exit code error.");
+		}
+	}
   }
 
   public void rotate() {
@@ -69,5 +89,13 @@ public class PathManager {
   public AtomicInteger getFileIndex() {
     return fileIndex;
   }
+
+public String getFilePrefix() {
+	return filePrefix;
+}
+
+public void setFilePrefix(String filePrefix) {
+	this.filePrefix = filePrefix;
+}
 
 }

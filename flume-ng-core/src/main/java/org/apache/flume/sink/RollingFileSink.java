@@ -34,6 +34,7 @@ import org.apache.flume.Transaction;
 import org.apache.flume.conf.Configurable;
 import org.apache.flume.formatter.output.PathManager;
 import org.apache.flume.instrumentation.SinkCounter;
+import org.mortbay.log.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,6 +53,7 @@ public class RollingFileSink extends AbstractSink implements Configurable {
   private int batchSize = defaultBatchSize;
 
   private File directory;
+  private String filePrefix;
   private long rollInterval;
   private OutputStream outputStream;
   private ScheduledExecutorService rollService;
@@ -74,6 +76,7 @@ public class RollingFileSink extends AbstractSink implements Configurable {
   public void configure(Context context) {
 
     String directory = context.getString("sink.directory");
+    this.filePrefix = context.getString("sink.filePrefix");
     String rollInterval = context.getString("sink.rollInterval");
 
     serializerType = context.getString("sink.serializer", "TEXT");
@@ -82,6 +85,7 @@ public class RollingFileSink extends AbstractSink implements Configurable {
             EventSerializer.CTX_PREFIX));
 
     Preconditions.checkArgument(directory != null, "Directory may not be null");
+    Preconditions.checkArgument(this.filePrefix != null, "filePrefix may not be null");
     Preconditions.checkNotNull(serializerType, "Serializer type is undefined");
 
     if (rollInterval == null) {
@@ -106,6 +110,7 @@ public class RollingFileSink extends AbstractSink implements Configurable {
     super.start();
 
     pathController.setBaseDirectory(directory);
+    pathController.setFilePrefix(filePrefix);
     if(rollInterval > 0){
 
       rollService = Executors.newScheduledThreadPool(
@@ -177,6 +182,12 @@ public class RollingFileSink extends AbstractSink implements Configurable {
         throw new EventDeliveryException("Failed to open file "
             + pathController.getCurrentFile() + " while delivering event", e);
       }
+      
+      try {
+		pathController.createCurrentSymbolicFile();
+	  } catch (IOException e) {
+		Log.warn("create symbolic file to current error." + e.getStackTrace());
+	  }
     }
 
     Channel channel = getChannel();
