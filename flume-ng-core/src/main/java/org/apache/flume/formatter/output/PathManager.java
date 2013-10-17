@@ -59,7 +59,9 @@ public class PathManager {
 		String newLink = newLinkFile.getAbsolutePath();
 		
 		//1. delete
-		newLinkFile.deleteOnExit();
+		if (newLinkFile.exists()) {
+			newLinkFile.delete();
+		}
 		//2. create new
 		ProcessBuilder pb = new ProcessBuilder("/bin/ln", "-s", target, newLink); 
 		Process proc = pb.start();
