@@ -61,12 +61,8 @@ public class PathManager {
 		//1. delete
 		newLinkFile.deleteOnExit();
 		//2. create new
-		Runtime rt = Runtime.getRuntime();
-		Process proc = rt.exec("ln -s " + target + " " + newLink);
-		int exitVal = proc.exitValue();
-		if (exitVal != 0) {
-			throw new IOException("exec return exit code error.");
-		}
+		ProcessBuilder proc = new ProcessBuilder("ln -s " + target + " " + newLink); 
+		proc.start();
 	}
   }
 
