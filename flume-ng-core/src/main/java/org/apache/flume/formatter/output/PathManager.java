@@ -61,7 +61,7 @@ public class PathManager {
 		//1. delete
 		newLinkFile.deleteOnExit();
 		//2. create new
-		ProcessBuilder pb = new ProcessBuilder("ln -s " + target + " " + newLink); 
+		ProcessBuilder pb = new ProcessBuilder("/bin/ln -s " + target + " " + newLink); 
 		Process proc = pb.start();
         try {
             int exitValue = proc.waitFor();
