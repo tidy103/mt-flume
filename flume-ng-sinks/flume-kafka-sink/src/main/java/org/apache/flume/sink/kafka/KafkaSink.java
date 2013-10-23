@@ -50,6 +50,7 @@ public class KafkaSink extends AbstractSink implements Configurable {
     private Integer queueSize;
     private String serializerClass;
     private String producerType;
+    private String topicPrefix;
 
     private Producer<String, String> producer;
 
@@ -62,6 +63,8 @@ public class KafkaSink extends AbstractSink implements Configurable {
         this.queueSize = context.getInteger("queueSize", 100000);
         this.serializerClass = context.getString("serializerClass", "kafka.serializer.StringEncoder");
         this.producerType = context.getString("producerType", "async");
+        this.topicPrefix = context.getString("topicPrefix");
+        Preconditions.checkNotNull(topicPrefix, "topicPrefix is required.");
     }
 
     @Override
@@ -116,6 +119,7 @@ public class KafkaSink extends AbstractSink implements Configurable {
                   logger.warn("headers do not contain entry of category");
                   continue;
                 }
+                topic = topicPrefix + "." + topic;
                 
                 List<String> eventList = topic2EventList.get(topic);
                 if(eventList == null){
