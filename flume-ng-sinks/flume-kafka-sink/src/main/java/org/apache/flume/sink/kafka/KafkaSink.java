@@ -19,9 +19,16 @@
 
 package org.apache.flume.sink.kafka;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
 import kafka.javaapi.producer.Producer;
 import kafka.javaapi.producer.ProducerData;
 import kafka.producer.ProducerConfig;
+
 import org.apache.flume.Channel;
 import org.apache.flume.Context;
 import org.apache.flume.Event;
@@ -33,9 +40,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
-
-import java.util.ArrayList;
-import java.util.Properties;
 
 public class KafkaSink extends AbstractSink implements Configurable {
     private static final Logger logger = LoggerFactory.getLogger(KafkaSink.class);
@@ -93,6 +97,7 @@ public class KafkaSink extends AbstractSink implements Configurable {
 
         Channel channel = getChannel();
         Transaction tx = channel.getTransaction();
+        Map<String, List<String>> topic2EventList = new HashMap<String, List<String>>();
         try {
             tx.begin();
 
@@ -103,11 +108,31 @@ public class KafkaSink extends AbstractSink implements Configurable {
                 if (event == null) {
                 	break;
                 }         
+                Map<String, String>headers = event.getHeaders();
+                if(headers == null){
+                  logger.warn("headers are Null");
+                  continue;
+                }
                 
-                ProducerData<String, String> kafkaData = new ProducerData<String, String>(this.topic, new String(event.getBody()));
-                list.add(kafkaData);             
+                String topic = headers.get("category");
+                if(topic == null){
+                  logger.warn("headers do not contain entry of category");
+                  continue;
+                }
+                
+                List<String> eventList = topic2EventList.get(topic);
+                if(eventList == null){
+                  eventList = new ArrayList<String>();
+                  topic2EventList.put(topic, eventList);
+                }
+                eventList.add(new String(event.getBody()));
+                           
             }
             
+            for(Map.Entry<String, List<String>> crtEntry : topic2EventList.entrySet()){
+              ProducerData<String, String> kafkaData = new ProducerData<String, String>(crtEntry.getKey(), crtEntry.getValue());
+              list.add(kafkaData); 
+            }
             producer.send(list);  
 
             tx.commit();
