@@ -46,7 +46,6 @@ public class KafkaSink extends AbstractSink implements Configurable {
 
     private String zkConnect;
     private Integer zkTimeout;
-    private String topic;
     private Integer batchSize;
     private Integer queueSize;
     private String serializerClass;
@@ -59,8 +58,6 @@ public class KafkaSink extends AbstractSink implements Configurable {
         this.zkConnect = context.getString("zkConnect");
         Preconditions.checkNotNull(zkConnect, "zkConnect is required.");
         this.zkTimeout = context.getInteger("zkTimeout", 30000);
-        this.topic = context.getString("topic");
-        Preconditions.checkNotNull(topic, "topic is required.");
         this.batchSize = context.getInteger("batchSize", 600);
         this.queueSize = context.getInteger("queueSize", 100000);
         this.serializerClass = context.getString("serializerClass", "kafka.serializer.StringEncoder");
