@@ -63,10 +63,13 @@ public class ScribeSource extends AbstractSource implements
   public static final String SCRIBE_CATEGORY = "category";
 
   private static final int DEFAULT_WORKERS = 5;
+  
+  private static final int DEFAULT_QUEUE_SIZE = 200;
 
   private TServer server;
   private int port = 1499;
   private int workers;
+  private int queueSize;
 
   private SourceCounter sourceCounter;
 
@@ -77,6 +80,11 @@ public class ScribeSource extends AbstractSource implements
     workers = context.getInteger("workerThreads", DEFAULT_WORKERS);
     if (workers <= 0) {
       workers = DEFAULT_WORKERS;
+    }
+    
+    queueSize = context.getInteger("queueSize", DEFAULT_QUEUE_SIZE);
+    if (queueSize <= 0) {
+    	queueSize = DEFAULT_QUEUE_SIZE;
     }
 
     if (sourceCounter == null) {
@@ -93,7 +101,7 @@ public class ScribeSource extends AbstractSource implements
         THsHaServer.Args args = new THsHaServer.Args(transport);
         
         //added by judasheng, set thrift server use Bounded queues.
-        ArrayBlockingQueue<Runnable> queue = new ArrayBlockingQueue<Runnable>(100);
+        ArrayBlockingQueue<Runnable> queue = new ArrayBlockingQueue<Runnable>(queueSize);
         RejectedExecutionHandler rjHandler = new BlockingPutPolicy();
         ExecutorService invoker = new ThreadPoolExecutor(workers, workers, 1, TimeUnit.HOURS, queue, rjHandler);
         args.executorService(invoker);
