@@ -46,11 +46,11 @@ public class KafkaSink extends AbstractSink implements Configurable {
 
     private String zkConnect;
     private Integer zkTimeout;
-    private String topic;
     private Integer batchSize;
     private Integer queueSize;
     private String serializerClass;
     private String producerType;
+    private String topicPrefix;
 
     private Producer<String, String> producer;
 
@@ -59,12 +59,12 @@ public class KafkaSink extends AbstractSink implements Configurable {
         this.zkConnect = context.getString("zkConnect");
         Preconditions.checkNotNull(zkConnect, "zkConnect is required.");
         this.zkTimeout = context.getInteger("zkTimeout", 30000);
-        this.topic = context.getString("topic");
-        Preconditions.checkNotNull(topic, "topic is required.");
         this.batchSize = context.getInteger("batchSize", 600);
         this.queueSize = context.getInteger("queueSize", 100000);
         this.serializerClass = context.getString("serializerClass", "kafka.serializer.StringEncoder");
         this.producerType = context.getString("producerType", "async");
+        this.topicPrefix = context.getString("topicPrefix");
+        Preconditions.checkNotNull(topicPrefix, "topicPrefix is required.");
     }
 
     @Override
@@ -97,18 +97,18 @@ public class KafkaSink extends AbstractSink implements Configurable {
 
         Channel channel = getChannel();
         Transaction tx = channel.getTransaction();
-        Map<String, List<String>> topic2EventList = new HashMap<String, List<String>>();
         try {
             tx.begin();
+            
+            Map<String, List<String>> topic2EventList = new HashMap<String, List<String>>();
 
-            ArrayList<ProducerData<String, String>> list = new ArrayList<ProducerData<String, String>>();
             int txnEventCount = 0;
             for (txnEventCount = 0; txnEventCount < batchSize; txnEventCount++) {
                 Event event = channel.take();
                 if (event == null) {
                 	break;
                 }         
-                Map<String, String>headers = event.getHeaders();
+                Map<String, String> headers = event.getHeaders();
                 if(headers == null){
                   logger.warn("headers are Null");
                   continue;
@@ -119,6 +119,7 @@ public class KafkaSink extends AbstractSink implements Configurable {
                   logger.warn("headers do not contain entry of category");
                   continue;
                 }
+                topic = topicPrefix + "." + topic;
                 
                 List<String> eventList = topic2EventList.get(topic);
                 if(eventList == null){
@@ -129,6 +130,7 @@ public class KafkaSink extends AbstractSink implements Configurable {
                            
             }
             
+            ArrayList<ProducerData<String, String>> list = new ArrayList<ProducerData<String, String>>();
             for(Map.Entry<String, List<String>> crtEntry : topic2EventList.entrySet()){
               ProducerData<String, String> kafkaData = new ProducerData<String, String>(crtEntry.getKey(), crtEntry.getValue());
               list.add(kafkaData); 
