@@ -85,8 +85,8 @@ public class StaticInterceptor implements Interceptor {
   @Override
   public Event intercept(Event event) {
     Map<String, String> headers = event.getHeaders();
-
-    if (preserveExisting && headers.containsKey(key)) {
+    String existValue = headers.get(key);
+    if (preserveExisting && existValue != null && ! existValue.trim().equals("")) {
       return event;
     }
 
