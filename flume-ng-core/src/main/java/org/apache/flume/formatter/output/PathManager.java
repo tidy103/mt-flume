@@ -21,25 +21,29 @@ package org.apache.flume.formatter.output;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class PathManager {
 
-  private long seriesTimestamp;
+  //private long seriesTimestamp;
   private File baseDirectory;
   private String filePrefix;
-  private AtomicInteger fileIndex;
+  private SimpleDateFormat sdf;
+  //private AtomicInteger fileIndex;
 
   private File currentFile;
 
   public PathManager() {
-    seriesTimestamp = System.currentTimeMillis();
-    fileIndex = new AtomicInteger();
+    //seriesTimestamp = System.currentTimeMillis();
+    //fileIndex = new AtomicInteger();
+	sdf = new SimpleDateFormat("yyyy-MM-dd_000HH");
   }
 
   public File nextFile() {
-    currentFile = new File(baseDirectory, 
-    		filePrefix + "." + seriesTimestamp + "." + fileIndex.incrementAndGet());
+	String curDateHourStr = sdf.format(new Date(System.currentTimeMillis()));
+	String fileName = filePrefix + "-" + curDateHourStr;  
+    currentFile = new File(baseDirectory, fileName);
 
     return currentFile;
   }
@@ -87,20 +91,12 @@ public class PathManager {
     this.baseDirectory = baseDirectory;
   }
 
-  public long getSeriesTimestamp() {
-    return seriesTimestamp;
-  }
-
-  public AtomicInteger getFileIndex() {
-    return fileIndex;
-  }
-
-public String getFilePrefix() {
+  public String getFilePrefix() {
 	return filePrefix;
-}
-
-public void setFilePrefix(String filePrefix) {
+  }
+	
+  public void setFilePrefix(String filePrefix) {
 	this.filePrefix = filePrefix;
-}
+  }
 
 }

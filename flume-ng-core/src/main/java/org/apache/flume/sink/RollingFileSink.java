@@ -172,7 +172,7 @@ public class RollingFileSink extends AbstractSink implements Configurable {
       logger.debug("Opening output stream for file {}", currentFile);
       try {
         outputStream = new BufferedOutputStream(
-            new FileOutputStream(currentFile));
+            new FileOutputStream(currentFile, true));
         serializer = EventSerializerFactory.getInstance(
             serializerType, serializerContext, outputStream);
         serializer.afterCreate();
