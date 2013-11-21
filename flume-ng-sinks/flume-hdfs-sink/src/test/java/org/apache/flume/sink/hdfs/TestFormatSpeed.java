@@ -33,6 +33,7 @@ public class TestFormatSpeed {
     public static void regFormat(String path, String fileName, List<Event> events){
         
         long t1 = System.currentTimeMillis();
+        boolean flag = true;
         for(Event event : events){
             String realPath = BucketPath.escapeString(path, event.getHeaders(),
                 null, false, Calendar.SECOND, 1, true);
@@ -51,11 +52,9 @@ public class TestFormatSpeed {
             String realPath = BucketPath.getMeiTuanHadoopLogPath(path, event.getHeaders().get("category"), null);
             // filePrefix if fixed,  just use it
             String realName = fileName;
-                
         }
         System.out.println("strFormat last : " + (System.currentTimeMillis() - t1));
     }
-    
     
     public static void main(String[] args){
     	//System.out.println(BucketPath.getMeiTuanHadoopLogPath("/user/hive/warehouse/originallog.db", "test", null));
