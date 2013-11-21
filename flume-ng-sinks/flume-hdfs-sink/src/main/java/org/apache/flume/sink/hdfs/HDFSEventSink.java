@@ -494,19 +494,18 @@ public class HDFSEventSink extends AbstractSink implements Configurable {
     			  + "] append[" + statAppendTime 
     			  + "] sync[" + statSyncTime 
     			  + "] getFilenameTime[" + getFilenameTime + "]");
+    	  
+          for(Map.Entry<String, HDFSEventSinkMetric> crtEntry : metricMap.entrySet()){
+              HDFSEventSinkMetric crtMetric = crtEntry.getValue();
+              crtMetric.sum();
+              LOG.info("HdfsSink-TIME-STAT sink[" + this.getName() + "] " + crtMetric.toString());
+          }
       }
-      
       statEventCount = 0;
       statAllTime = 0;
       statTakeTime = 0;
       statAppendTime = 0;
       statSyncTime = 0;
-      
-      for(Map.Entry<String, HDFSEventSinkMetric> crtEntry : metricMap.entrySet()){
-          HDFSEventSinkMetric crtMetric = crtEntry.getValue();
-          crtMetric.sum();
-          LOG.info("HdfsSink-TIME-STAT sink[" + this.getName() + "] " + crtMetric.toString());
-      }
 
       if (txnEventCount < 1) {
         return Status.BACKOFF;
