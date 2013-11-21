@@ -393,6 +393,7 @@ public class HDFSEventSink extends AbstractSink implements Configurable {
             metricMap.put(category, crtMetric);
         }
         crtMetric.incTake(tEnd - tStart);
+        crtMetric.incEventNum(1);
         // reconstruct the path name by substituting place holders
         String realPath = BucketPath.escapeString(filePath, event.getHeaders(),
             timeZone, needRounding, roundUnit, roundValue, useLocalTime);
@@ -471,7 +472,7 @@ public class HDFSEventSink extends AbstractSink implements Configurable {
       
       //print stat info
       if (statEventCount >= STAT_EVENT_COUNT_THRESHOLD) {
-	      LOG.info("HdfsSink-TIME-STAT eventcount["+statEventCount+"] all["+statAllTime+"] "
+	      LOG.info("HdfsSink-TIME-STAT writers[" + writers.size() + "] eventcount["+statEventCount+"] all["+statAllTime+"] "
 	    		  +"take["+statTakeTime+"] append["+statAppendTime+"] sync["+statSyncTime+"]");
 	      statEventCount = 0;
 	      statAllTime = 0;

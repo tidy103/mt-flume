@@ -20,12 +20,14 @@ package org.apache.flume.sink.hdfs;
 public class HDFSEventSinkMetric {
     
     private String category;
+    private int eventNum;
     private long all;
     private long take;
     private long append;
     private long sync;
     
     public HDFSEventSinkMetric(){
+        this.eventNum = 0;
         this.all = 0;
         this.take = 0;
         this.append = 0;
@@ -40,6 +42,16 @@ public class HDFSEventSinkMetric {
     }
     public void setCategory(String category) {
         this.category = category;
+    }
+    
+    public int getEventNum() {
+        return eventNum;
+    }
+    public void setEventNum(int eventNum) {
+        this.eventNum = eventNum;
+    }
+    public void incEventNum(int inc){
+        this.eventNum += inc;
     }
     public long getAll() {
         return all;
@@ -84,9 +96,8 @@ public class HDFSEventSinkMetric {
     @Override
     public String toString() {
         
-        return "HDFSEventSinkMetric category=" + category + ", all[" + all
-                + "] take[" + take + "] append[" + append + "] sync[" + sync
-                + "]";
+        return String.format("HDFSEventSinkMetric category=%s, eventNum[%d] all[%d] take[%d]" +
+        		" append[%d] sync[%d]", category, eventNum, all, take, append, sync);
     }
     
 }
