@@ -505,7 +505,7 @@ public class HDFSEventSink extends AbstractSink implements Configurable {
       for(Map.Entry<String, HDFSEventSinkMetric> crtEntry : metricMap.entrySet()){
           HDFSEventSinkMetric crtMetric = crtEntry.getValue();
           crtMetric.sum();
-          LOG.info("HdfsSink-TIME-STAT-" + this.getName() + " " + crtMetric.toString());
+          LOG.info("HdfsSink-TIME-STAT sink[" + this.getName() + "] " + crtMetric.toString());
       }
 
       if (txnEventCount < 1) {
