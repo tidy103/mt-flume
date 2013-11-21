@@ -22,17 +22,18 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.TimeZone;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TimeZone;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-import com.google.common.annotations.VisibleForTesting;
 import org.apache.flume.Channel;
 import org.apache.flume.Clock;
 import org.apache.flume.Context;
@@ -54,6 +55,7 @@ import org.apache.hadoop.security.UserGroupInformation.AuthenticationMethod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -368,6 +370,9 @@ public class HDFSEventSink extends AbstractSink implements Configurable {
     Channel channel = getChannel();
     Transaction transaction = channel.getTransaction();
     List<BucketWriter> writers = Lists.newArrayList();
+    Map<String, HDFSEventSinkMetric> metricMap = new HashMap<String, HDFSEventSinkMetric>();
+    Map<String, String> bucketWriter2Category = new HashMap<String, String>();
+    
     transaction.begin();
     long tStart = 0;
     long tEnd = 0;
@@ -375,13 +380,19 @@ public class HDFSEventSink extends AbstractSink implements Configurable {
       int txnEventCount = 0;
       for (txnEventCount = 0; txnEventCount < batchSize; txnEventCount++) {
     	tStart = System.currentTimeMillis(); //stat start 
-        Event event = channel.take();
-        tEnd = System.currentTimeMillis(); //stat end
-        statTakeTime += tEnd - tStart;
+        Event event = channel.take();                
         if (event == null) {
           break;
         }
-
+        tEnd = System.currentTimeMillis(); //stat end
+        statTakeTime += tEnd - tStart;
+        String category = event.getHeaders().get("category");
+        HDFSEventSinkMetric crtMetric = metricMap.get(category);
+        if(crtMetric == null){
+            crtMetric = new HDFSEventSinkMetric(category);
+            metricMap.put(category, crtMetric);
+        }
+        crtMetric.incTake(tEnd - tStart);
         // reconstruct the path name by substituting place holders
         String realPath = BucketPath.escapeString(filePath, event.getHeaders(),
             timeZone, needRounding, roundUnit, roundValue, useLocalTime);
@@ -411,6 +422,7 @@ public class HDFSEventSink extends AbstractSink implements Configurable {
               lookupPath, callTimeout, callTimeoutPool);
 
           sfWriters.put(lookupPath, bucketWriter);
+          bucketWriter2Category.put(bucketWriter.toString(), category);
         }
 
         // track the buckets getting written in this transaction
@@ -423,6 +435,7 @@ public class HDFSEventSink extends AbstractSink implements Configurable {
         bucketWriter.append(event);
         tEnd = System.currentTimeMillis(); //stat end
         statAppendTime += tEnd - tStart;
+        crtMetric.incAppend(tEnd - tStart);
       }
 
       if (txnEventCount == 0) {
@@ -437,7 +450,16 @@ public class HDFSEventSink extends AbstractSink implements Configurable {
       // flush all pending buckets before committing the transaction
       tStart = System.currentTimeMillis(); //stat start 
       for (BucketWriter bucketWriter : writers) {
+        long begin = System.currentTimeMillis();
         bucketWriter.flush();
+        long end = System.currentTimeMillis();
+        String category = bucketWriter2Category.get(bucketWriter.toString());
+        HDFSEventSinkMetric crtMetric = metricMap.get(category);
+        if(crtMetric != null){
+            crtMetric.incSync(end - begin);
+        }else{
+            LOG.error("bucketWriter2Category has no entry for : " + bucketWriter.toString());
+        }
       }
       tEnd = System.currentTimeMillis(); //stat end
       statSyncTime += tEnd - tStart;
@@ -456,6 +478,12 @@ public class HDFSEventSink extends AbstractSink implements Configurable {
 	      statTakeTime = 0;
 	      statAppendTime = 0;
 	      statSyncTime = 0;
+	      
+	      for(Map.Entry<String, HDFSEventSinkMetric> crtEntry : metricMap.entrySet()){
+	          HDFSEventSinkMetric crtMetric = crtEntry.getValue();
+	          crtMetric.sum();
+	          LOG.info("HdfsSink-TIME-STAT " + crtMetric.toString());
+	      }
       }
 
       if (txnEventCount < 1) {
