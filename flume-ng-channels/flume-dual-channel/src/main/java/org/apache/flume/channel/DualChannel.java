@@ -219,7 +219,7 @@ public class DualChannel extends BasicChannelSemantics {
       fileTransaction.commit();
 
       //print stat information
-      if (handleEventCount.get() >= 50000) {
+      if (handleEventCount.get() >= 200000) {
         String msg = String.format("DualChannel-STAT name[%s] " + 
                 "totalEvent[%d] memEvent[%d] fileEvent[%d] " + 
                 "memQueueSize[%d] fileQueueSize[%d]", 

@@ -485,8 +485,16 @@ public class HDFSEventSink extends AbstractSink implements Configurable {
       statAllTime += t2 - t1;
       
       //print stat info
-      LOG.info("HdfsSink-TIME-STAT-" + this.getName() + " writers[" + writers.size() + "] eventcount["+statEventCount+"] all["+statAllTime+"] "
-    		  +"take["+statTakeTime+"] append["+statAppendTime+"] sync["+statSyncTime+"] getFilenameTime[" + getFilenameTime + "]");
+      if (statEventCount > 0) {
+    	  LOG.info("HdfsSink-TIME-STAT sink[" + this.getName() 
+    			  + "] writers[" + writers.size() 
+    			  + "] eventcount[" + statEventCount 
+    			  + "] all[" + statAllTime 
+    			  + "] take[" + statTakeTime 
+    			  + "] append[" + statAppendTime 
+    			  + "] sync[" + statSyncTime 
+    			  + "] getFilenameTime[" + getFilenameTime + "]");
+      }
       
       statEventCount = 0;
       statAllTime = 0;
