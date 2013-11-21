@@ -47,25 +47,8 @@ public class TestFormatSpeed {
         
         
         long t1 = System.currentTimeMillis();
-        for(Event event : events){
-            Calendar calendar = null;
-    
-            calendar = Calendar.getInstance();
-    
-//            String dt = String.format("%s%s%s", calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1,
-//                    calendar.get(Calendar.DAY_OF_MONTH));
-//            String dt = String.valueOf(calendar.get(Calendar.YEAR)) + String.valueOf(calendar.get(Calendar.MONTH) + 1)
-//                    + String.valueOf(calendar.get(Calendar.DAY_OF_MONTH));
-            
-            StringBuilder sb = new StringBuilder();
-            sb.append(calendar.get(Calendar.YEAR)).append(calendar.get(Calendar.MONTH) + 1).append(calendar.get(Calendar.DAY_OF_MONTH));
-            String dt = sb.toString();
-            
-            String hour = String.valueOf(calendar.get(Calendar.HOUR_OF_DAY));        
-//            String realPath = "/user/hive/warehouse/originallog.db/" + String.format("%sorg/dt=%s/hour=%s", event.getHeaders().get("category"),
-//                    dt, hour);
-            
-            String realPath = "/user/hive/warehouse/originallog.db/" + event.getHeaders().get("category") + "org/dt=" + dt + "/hour=" + hour; 
+        for(Event event : events){       
+            String realPath = BucketPath.getMeiTuanHadoopLogPath(path, event.getHeaders().get("category"), null);
             // filePrefix if fixed,  just use it
             String realName = fileName;
                 
@@ -75,6 +58,7 @@ public class TestFormatSpeed {
     
     
     public static void main(String[] args){
+    	//System.out.println(BucketPath.getMeiTuanHadoopLogPath("/user/hive/warehouse/originallog.db", "test", null));
         
         List<Event> events = new ArrayList<Event>();
         Event event = new SimpleEvent();
@@ -87,13 +71,11 @@ public class TestFormatSpeed {
         }
         
         String path = "/user/hive/warehouse/originallog.db/%{category}org/dt=%Y%m%d/hour=%H";
+        String path2 = "/user/hive/warehouse/originallog.db/";
         String fileName = "lc_srv02";
         
         regFormat(path, fileName, events);       
-        strFormat(path, fileName, events);
-        
-        
-        
+        strFormat(path2, fileName, events);
     }
 
 }

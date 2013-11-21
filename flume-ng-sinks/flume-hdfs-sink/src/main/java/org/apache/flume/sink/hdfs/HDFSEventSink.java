@@ -409,17 +409,7 @@ public class HDFSEventSink extends AbstractSink implements Configurable {
           timeZone, needRounding, roundUnit, roundValue, useLocalTime);
           */
         // path /user/hive/warehouse/originallog.db/%{category}org/dt=%Y%m%d/hour=%H
-        Calendar calendar = null;
-        if(timeZone == null){
-            calendar = Calendar.getInstance();
-        }else{
-            calendar = Calendar.getInstance(timeZone); 
-        }       
-        StringBuilder sb = new StringBuilder();
-        sb.append(calendar.get(Calendar.YEAR)).append(calendar.get(Calendar.MONTH) + 1).append(calendar.get(Calendar.DAY_OF_MONTH));
-        String dt = sb.toString();       
-        String hour = String.valueOf(calendar.get(Calendar.HOUR_OF_DAY));
-        String realPath = filePath + event.getHeaders().get("category") + "org/dt=" + dt + "/hour=" + hour; 
+        String realPath = BucketPath.getMeiTuanHadoopLogPath(filePath, event.getHeaders().get("category"), timeZone);
         // filePrefix if fixed,  just use it
         String realName = fileName;
 

@@ -333,6 +333,48 @@ public class BucketPath {
   public static String escapeString(String in, Map<String, String> headers){
     return escapeString(in, headers, false, 0, 0);
   }
+  
+  public static String getMeiTuanHadoopLogPath(String filePath, String category, TimeZone timeZone) {
+      Calendar calendar = null;
+      if(timeZone == null){
+          calendar = Calendar.getInstance();
+      }else{
+          calendar = Calendar.getInstance(timeZone); 
+      }       
+      
+      StringBuilder sb = new StringBuilder();
+      
+      sb.append(filePath);
+      if ( !filePath.endsWith("/") ) {
+    	  sb.append("/");
+      }
+      sb.append(category).append("org");
+      
+      sb.append("/dt=").append(calendar.get(Calendar.YEAR));
+      int month = calendar.get(Calendar.MONTH) + 1;
+      if (month < 10) {
+    	  sb.append("0").append(month);
+      } else {
+    	  sb.append(month);
+      }
+      int day = calendar.get(Calendar.DAY_OF_MONTH);
+      if (day < 10) {
+    	  sb.append("0").append(day);
+      } else {
+    	  sb.append(day);
+      }
+      
+      sb.append("/hour=");
+      int hour = calendar.get(Calendar.HOUR_OF_DAY);
+      if (hour < 10) {
+    	  sb.append("0").append(hour);
+      } else {
+    	  sb.append(hour);
+      }
+      
+      
+      return sb.toString();
+  }
 
   /**
    * A wrapper around
