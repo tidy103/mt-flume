@@ -33,11 +33,17 @@ public class TestFormatSpeed {
     public static void regFormat(String path, String fileName, List<Event> events){
         
         long t1 = System.currentTimeMillis();
+        boolean flag = true;
         for(Event event : events){
             String realPath = BucketPath.escapeString(path, event.getHeaders(),
                 null, false, Calendar.SECOND, 1, true);
             String realName = BucketPath.escapeString(fileName, event.getHeaders(),
                     null, false, Calendar.SECOND, 1, true);
+            
+            if(flag){
+                System.out.println(realPath + "/" + realName);
+                flag = false;
+            }
         }
         System.out.println("regFormat last : " + (System.currentTimeMillis() - t1));
     }
@@ -47,6 +53,7 @@ public class TestFormatSpeed {
         
         
         long t1 = System.currentTimeMillis();
+        boolean flag = true;
         for(Event event : events){
             Calendar calendar = null;
     
@@ -58,20 +65,31 @@ public class TestFormatSpeed {
 //                    + String.valueOf(calendar.get(Calendar.DAY_OF_MONTH));
             
             StringBuilder sb = new StringBuilder();
-            sb.append(calendar.get(Calendar.YEAR)).append(calendar.get(Calendar.MONTH) + 1).append(calendar.get(Calendar.DAY_OF_MONTH));
+            sb.append(calendar.get(Calendar.YEAR)).append(zeroFill(calendar.get(Calendar.MONTH) + 1)).append(zeroFill(calendar.get(Calendar.DAY_OF_MONTH)));
             String dt = sb.toString();
             
-            String hour = String.valueOf(calendar.get(Calendar.HOUR_OF_DAY));        
+            String hour = zeroFill(calendar.get(Calendar.HOUR_OF_DAY));        
 //            String realPath = "/user/hive/warehouse/originallog.db/" + String.format("%sorg/dt=%s/hour=%s", event.getHeaders().get("category"),
 //                    dt, hour);
             
             String realPath = "/user/hive/warehouse/originallog.db/" + event.getHeaders().get("category") + "org/dt=" + dt + "/hour=" + hour; 
             // filePrefix if fixed,  just use it
             String realName = fileName;
-                
+            
+            if(flag){
+                System.out.println(realPath + "/" + realName);
+                flag = false;
+            }
         }
         System.out.println("strFormat last : " + (System.currentTimeMillis() - t1));
     }
+    
+    public static String zeroFill(int num){
+        if(num < 10){
+            return "0" + num;
+        }
+        return String.valueOf(num);
+      }
     
     
     public static void main(String[] args){
