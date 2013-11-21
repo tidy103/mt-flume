@@ -20,6 +20,7 @@ package org.apache.flume.sink.hdfs;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -141,6 +142,7 @@ public class HDFSEventSink extends AbstractSink implements Configurable {
 
   private volatile int idleTimeout;
   private Clock clock;
+  private SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHH");
 
   private boolean switchon = true;
   
@@ -400,10 +402,26 @@ public class HDFSEventSink extends AbstractSink implements Configurable {
         crtMetric.incEventNum(1);
         tStart = System.currentTimeMillis();
         // reconstruct the path name by substituting place holders
+        /*
         String realPath = BucketPath.escapeString(filePath, event.getHeaders(),
             timeZone, needRounding, roundUnit, roundValue, useLocalTime);
         String realName = BucketPath.escapeString(fileName, event.getHeaders(),
           timeZone, needRounding, roundUnit, roundValue, useLocalTime);
+          */
+        // path /user/hive/warehouse/originallog.db/%{category}org/dt=%Y%m%d/hour=%H
+        Calendar calendar = null;
+        if(timeZone == null){
+            calendar = Calendar.getInstance();
+        }else{
+            calendar = Calendar.getInstance(timeZone); 
+        }       
+        StringBuilder sb = new StringBuilder();
+        sb.append(calendar.get(Calendar.YEAR)).append(calendar.get(Calendar.MONTH) + 1).append(calendar.get(Calendar.DAY_OF_MONTH));
+        String dt = sb.toString();       
+        String hour = String.valueOf(calendar.get(Calendar.HOUR_OF_DAY));
+        String realPath = filePath + event.getHeaders().get("category") + "org/dt=" + dt + "/hour=" + hour; 
+        // filePrefix if fixed,  just use it
+        String realName = fileName;
 
         getFilenameTime += System.currentTimeMillis() - tStart;
         
