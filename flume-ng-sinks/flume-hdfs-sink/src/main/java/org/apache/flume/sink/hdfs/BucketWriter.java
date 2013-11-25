@@ -307,6 +307,11 @@ class BucketWriter {
       timedRollFuture.cancel(false); // do not cancel myself if running!
       timedRollFuture = null;
     }
+    
+    if (idleFuture != null && !idleFuture.isDone()) {
+    	idleFuture.cancel(false); // do not cancel myself if running!
+    	idleFuture = null;
+    }
 
     if (bucketPath != null && fileSystem != null) {
       renameBucket(); // could block or throw IOException
@@ -334,6 +339,10 @@ private void graceClose() throws IOException, InterruptedException{
       if (timedRollFuture != null && !timedRollFuture.isDone()) {
         timedRollFuture.cancel(false); // do not cancel myself if running!
         timedRollFuture = null;
+      }
+      if (idleFuture != null && !idleFuture.isDone()) {
+      	idleFuture.cancel(false); // do not cancel myself if running!
+      	idleFuture = null;
       }
       LOG.error("Hit max hdfs failed count, ignore the failed file, open new file");
     }
