@@ -62,6 +62,7 @@ public class DualChannel extends BasicChannelSemantics {
   private AtomicLong memHandleEventCount = new AtomicLong();
   private AtomicLong fileHandleEventCount = new AtomicLong();
   private ChannelCounter channelCounter;
+  private boolean switchon = true;
   
   public DualChannel() {
 	super(); 
@@ -79,6 +80,11 @@ public class DualChannel extends BasicChannelSemantics {
   public void configure(Context context) {
 	if (channelCounter == null) {
 	  channelCounter = new ChannelCounter(getName());
+	}
+	
+	this.switchon = context.getBoolean("switchon", true);
+	if(! switchon){
+	    LOG.info("DualChannel switchon set off, will always put events to file channel");
 	}
 	
 	memChannel.setName(getName() + "-memory");
@@ -174,7 +180,7 @@ public class DualChannel extends BasicChannelSemantics {
       channelCounter.incrementEventPutAttemptCount();
       handleEventCount.incrementAndGet();
 
-      if (putToMemChannel.get()) {
+      if (switchon && putToMemChannel.get()) {
         memHandleEventCount.incrementAndGet();
     	memTransaction.put(event);
 
