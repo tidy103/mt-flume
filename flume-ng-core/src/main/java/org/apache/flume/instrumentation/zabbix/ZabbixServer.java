@@ -164,12 +164,12 @@ public class ZabbixServer implements MonitorService {
                     Map<String, String> attributeMap = metricsMap
                             .get(component);
                     for (String attribute : attributeMap.keySet()) {
-                        String value = attributeMap.get(attribute);
-                        if(! MetricFilter.isFiltered(attribute)){
+                        if(MetricFilter.accept(component, attribute)){
+                            String value = attributeMap.get(attribute);
                             attribute = ZABBIX_CONTEXT + component + "." + attribute;
                             ZabbixItem item = new ZabbixItem(attribute, value, hostname);
                             itemList.add(item);
-                            logger.trace(item.toString());
+                            logger.debug(item.toString());
                         }
                     }
                 }

@@ -18,23 +18,48 @@
  */
 package org.apache.flume.instrumentation.zabbix;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 public class MetricFilter {
     
-    
-    private static Set<String> filteredMetricNameSet = new HashSet<String>();
+    private static Map<String, Set<String>> acceptComponent2MetricSet = new HashMap<String, Set<String>>();   
     
     static{
-        filteredMetricNameSet.add("Type");
-        filteredMetricNameSet.add("StopTime");
-        filteredMetricNameSet.add("StartTime");
+        Set<String> sourceMetrics = new HashSet<String>();
+        sourceMetrics.add("EventReceivedCount");
+        sourceMetrics.add("EventAcceptedCount");    // processed count
+        acceptComponent2MetricSet.put("SOURCE", sourceMetrics);
+        
+        Set<String> channelMetrics = new HashSet<String>();
+        channelMetrics.add("ChannelSize");
+        acceptComponent2MetricSet.put("CHANNEL", channelMetrics);
+        
+        Set<String> sinkMetrics = new HashSet<String>();
+        sinkMetrics.add("EventDrainSuccessCount");
+        acceptComponent2MetricSet.put("SINK", sinkMetrics);
+        
     }
     
-    public static boolean isFiltered(String metricName){
+    private static String getRealComponent(String component){
+        //CHANNEL.ch_dual_0-file
+        String tokens[] = component.split("\\.");
+        return tokens[0];
+    }
+    
+    public static boolean accept(String component, String metricName){
+        if(component == null || component.equals("")){
+            return false;
+        }
+        component = getRealComponent(component);
+        Set<String> acceptMetricSet = acceptComponent2MetricSet.get(component);
+        if(acceptMetricSet != null && acceptMetricSet.contains(metricName)){
+            return true;            
+        }
         
-        return filteredMetricNameSet.contains(metricName);
+        return false;
     }
 
 }
