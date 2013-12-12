@@ -332,7 +332,7 @@ private void graceClose() throws IOException, InterruptedException{
   }catch(IOException e){
     hdfsFailCount ++;
     if(hdfsFailCount < maxHdfsFailCount){
-      LOG.error("Closing hdfs file failed, current failed count : " + hdfsFailCount);
+      LOG.warn("Closing hdfs file failed, current failed count : " + hdfsFailCount);
       throw e;
     }else{
       isOpen = false;

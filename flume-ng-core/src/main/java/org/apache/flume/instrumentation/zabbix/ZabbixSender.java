@@ -185,7 +185,7 @@ public class ZabbixSender {
                             + new String(response) + "' for key '" + key + "'");
                 }
             } catch (Exception ex) {
-                logger.error("Error contacting Zabbix server " + zabbixServer.getKey()
+                logger.warn("Error contacting Zabbix server " + zabbixServer.getKey()
                         + "  on port " + zabbixServer.getValue());
             }
 
