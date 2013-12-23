@@ -20,13 +20,12 @@
 package org.apache.flume.sink.kafka;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
 import kafka.javaapi.producer.Producer;
-import kafka.javaapi.producer.ProducerData;
+import kafka.producer.KeyedMessage;
 import kafka.producer.ProducerConfig;
 
 import org.apache.flume.Channel;
@@ -44,25 +43,31 @@ import com.google.common.base.Preconditions;
 public class KafkaSink extends AbstractSink implements Configurable {
     private static final Logger logger = LoggerFactory.getLogger(KafkaSink.class);
 
-    private String zkConnect;
-    private Integer zkTimeout;
-    private Integer batchSize;
-    private Integer queueSize;
+    private String brokerList;
+    private Integer requestRequiredAcks;
+    private Long requestTimeoutms;
     private String serializerClass;
+    private String partitionerClass;
     private String producerType;
+    private Integer batchNumMessages;
+    private Integer queueBufferingMaxMessages;
+    
     private String topicPrefix;
 
     private Producer<String, String> producer;
 
     @Override
     public void configure(Context context) {
-        this.zkConnect = context.getString("zkConnect");
-        Preconditions.checkNotNull(zkConnect, "zkConnect is required.");
-        this.zkTimeout = context.getInteger("zkTimeout", 30000);
-        this.batchSize = context.getInteger("batchSize", 600);
-        this.queueSize = context.getInteger("queueSize", 100000);
+        this.brokerList = context.getString("brokerList");
+        Preconditions.checkNotNull(brokerList, "brokerList is required.");
+        this.requestRequiredAcks = context.getInteger("requestRequiredAcks", 0);
+        this.requestTimeoutms = context.getLong("requestTimeoutms", Long.valueOf(10000));
         this.serializerClass = context.getString("serializerClass", "kafka.serializer.StringEncoder");
+        this.partitionerClass = context.getString("partitionerClass", "kafka.producer.DefaultPartitioner");
         this.producerType = context.getString("producerType", "async");
+        this.batchNumMessages = context.getInteger("batchNumMessages", 200);
+        this.queueBufferingMaxMessages = context.getInteger("queueBufferingMaxMessages", 1000);
+        
         this.topicPrefix = context.getString("topicPrefix");
         Preconditions.checkNotNull(topicPrefix, "topicPrefix is required.");
     }
@@ -72,12 +77,14 @@ public class KafkaSink extends AbstractSink implements Configurable {
         super.start();
 
 		Properties props = new Properties();
-		props.put("serializer.class", this.serializerClass);
-		props.put("zk.connect", this.zkConnect);
-		props.put("producer.type", this.producerType);
-		props.put("batch.size", String.valueOf(this.batchSize));
-		props.put("zk.sessiontimeout.ms", String.valueOf(this.zkTimeout));
-		props.put("queue.size", String.valueOf(this.queueSize));
+    	props.put("metadata.broker.list", brokerList);
+    	props.put("request.required.acks", String.valueOf(requestRequiredAcks));
+    	props.put("request.timeout.ms", String.valueOf(requestTimeoutms));
+		props.put("serializer.class", serializerClass);
+		props.put("partitioner.class", partitionerClass);
+		props.put("producer.type", producerType);
+		props.put("batch.num.messages", String.valueOf(batchNumMessages));
+		props.put("queue.buffering.max.messages", String.valueOf(queueBufferingMaxMessages));
 
 		producer = new Producer<String, String>(new ProducerConfig(props));
     }
@@ -100,10 +107,10 @@ public class KafkaSink extends AbstractSink implements Configurable {
         try {
             tx.begin();
             
-            Map<String, List<String>> topic2EventList = new HashMap<String, List<String>>();
+            List<KeyedMessage<String, String>> datas = new ArrayList<KeyedMessage<String, String>>();
 
             int txnEventCount = 0;
-            for (txnEventCount = 0; txnEventCount < batchSize; txnEventCount++) {
+            for (txnEventCount = 0; txnEventCount < batchNumMessages; txnEventCount++) {
                 Event event = channel.take();
                 if (event == null) {
                 	break;
@@ -121,21 +128,11 @@ public class KafkaSink extends AbstractSink implements Configurable {
                 }
                 topic = topicPrefix + "." + topic;
                 
-                List<String> eventList = topic2EventList.get(topic);
-                if(eventList == null){
-                  eventList = new ArrayList<String>();
-                  topic2EventList.put(topic, eventList);
-                }
-                eventList.add(new String(event.getBody()));
-                           
+                KeyedMessage<String, String> m = new KeyedMessage<String, String>(topic, new String(event.getBody()));
+                datas.add(m);
             }
-            
-            ArrayList<ProducerData<String, String>> list = new ArrayList<ProducerData<String, String>>();
-            for(Map.Entry<String, List<String>> crtEntry : topic2EventList.entrySet()){
-              ProducerData<String, String> kafkaData = new ProducerData<String, String>(crtEntry.getKey(), crtEntry.getValue());
-              list.add(kafkaData); 
-            }
-            producer.send(list);  
+
+            producer.send(datas);  
 
             tx.commit();
         } catch (Exception e) {
