@@ -85,6 +85,7 @@ public class KafkaSink extends AbstractSink implements Configurable {
 		props.put("producer.type", producerType);
 		props.put("batch.num.messages", String.valueOf(batchNumMessages));
 		props.put("queue.buffering.max.messages", String.valueOf(queueBufferingMaxMessages));
+		props.put("topic.metadata.refresh.interval.ms", "30000");
 
 		producer = new Producer<String, String>(new ProducerConfig(props));
     }
