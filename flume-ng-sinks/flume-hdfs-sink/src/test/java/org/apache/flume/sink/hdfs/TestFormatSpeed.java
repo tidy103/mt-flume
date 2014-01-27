@@ -9,6 +9,8 @@ import java.util.Map;
 import org.apache.flume.Event;
 import org.apache.flume.event.SimpleEvent;
 import org.apache.flume.formatter.output.BucketPath;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -28,38 +30,11 @@ import org.apache.flume.formatter.output.BucketPath;
  * limitations under the License.
  */
 public class TestFormatSpeed {
+    private List<Event> events;
     
-    
-    public static void regFormat(String path, String fileName, List<Event> events){
-        
-        long t1 = System.currentTimeMillis();
-        boolean flag = true;
-        for(Event event : events){
-            String realPath = BucketPath.escapeString(path, event.getHeaders(),
-                null, false, Calendar.SECOND, 1, true);
-            String realName = BucketPath.escapeString(fileName, event.getHeaders(),
-                    null, false, Calendar.SECOND, 1, true);
-        }
-        System.out.println("regFormat last : " + (System.currentTimeMillis() - t1));
-    }
-    
-    
-    public static void strFormat(String path, String fileName, List<Event> events){
-        
-        
-        long t1 = System.currentTimeMillis();
-        for(Event event : events){       
-            String realPath = BucketPath.getMeiTuanHadoopLogPath(path, event.getHeaders().get("category"), null);
-            // filePrefix if fixed,  just use it
-            String realName = fileName;
-        }
-        System.out.println("strFormat last : " + (System.currentTimeMillis() - t1));
-    }
-    
-    public static void main(String[] args){
-    	//System.out.println(BucketPath.getMeiTuanHadoopLogPath("/user/hive/warehouse/originallog.db", "test", null));
-        
-        List<Event> events = new ArrayList<Event>();
+    @Before
+    public void setUp(){
+        events = new ArrayList<Event>();
         Event event = new SimpleEvent();
         Map<String, String> headers = new HashMap<String, String>();
         headers.put("category", "test");
@@ -69,12 +44,43 @@ public class TestFormatSpeed {
             events.add(event);
         }
         
+    }
+    
+    @Test
+    public void testRegFormat(){
         String path = "/user/hive/warehouse/originallog.db/%{category}org/dt=%Y%m%d/hour=%H";
-        String path2 = "/user/hive/warehouse/originallog.db/";
         String fileName = "lc_srv02";
+        regFormat(path, fileName);       
+    }
+    
+    public void regFormat(String path, String fileName){
         
-        regFormat(path, fileName, events);       
-        strFormat(path2, fileName, events);
+        long t1 = System.currentTimeMillis();
+        for(Event event : events){
+            String realPath = BucketPath.escapeString(path, event.getHeaders(),
+                null, false, Calendar.SECOND, 1, true);
+            String realName = BucketPath.escapeString(fileName, event.getHeaders(),
+                    null, false, Calendar.SECOND, 1, true);
+        }
+        System.out.println("regFormat last : " + (System.currentTimeMillis() - t1));
+    }
+    
+    @Test
+    public void testStrFormat(){
+        String path = "/user/hive/warehouse/originallog.db/";
+        String fileName = "lc_srv02";
+        strFormat(path, fileName);
+    }
+    
+    public void strFormat(String path, String fileName){      
+        
+        long t1 = System.currentTimeMillis();
+        for(Event event : events){       
+            String realPath = BucketPath.getMeiTuanHadoopLogPath(path, event.getHeaders().get("category"), null);
+            // filePrefix if fixed,  just use it
+            String realName = fileName;
+        }
+        System.out.println("strFormat last : " + (System.currentTimeMillis() - t1));
     }
 
 }
