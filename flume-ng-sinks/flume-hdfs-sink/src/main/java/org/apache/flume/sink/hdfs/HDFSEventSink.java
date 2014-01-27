@@ -537,7 +537,8 @@ public class HDFSEventSink extends AbstractSink implements Configurable {
       LOG.info("Closing {}", entry.getKey());
 
       try {
-        entry.getValue().close();
+        // cancel the idle callback
+        entry.getValue().close(true);
       } catch (Exception ex) {
         LOG.warn("Exception while closing " + entry.getKey() + ". " +
                 "Exception follows.", ex);

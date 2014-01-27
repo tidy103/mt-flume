@@ -302,23 +302,29 @@ class BucketWriter {
       LOG.info("HDFSWriter is already closed: {}", bucketPath);
     }
 
-    // NOTE: timed rolls go through this codepath as well as other roll types
-    if (timedRollFuture != null && !timedRollFuture.isDone()) {
-      timedRollFuture.cancel(false); // do not cancel myself if running!
-      timedRollFuture = null;
-    }
-    
-    if (idleFuture != null && !idleFuture.isDone()) {
-    	idleFuture.cancel(false); // do not cancel myself if running!
-    	idleFuture = null;
-    }
+    cancelScheduler();
 
     if (bucketPath != null && fileSystem != null) {
       renameBucket(); // could block or throw IOException
       fileSystem = null;
     }
   }
-
+  
+  /**
+   * when stop flume, all schedulers should be canceled
+   * @param cancelIdleCallback
+   * @throws IOException
+   * @throws InterruptedException
+   */
+  public void close(boolean cancelIdleCallback) throws IOException, InterruptedException{
+      close();
+      if(cancelIdleCallback){
+          if (idleFuture != null && !idleFuture.isDone()) {
+              idleFuture.cancel(false); // do not cancel myself if running!
+              idleFuture = null;
+          }
+      }
+  }
   
 /**
  * try to close file, if failed too many times, just ignore  
@@ -336,20 +342,20 @@ private void graceClose() throws IOException, InterruptedException{
       throw e;
     }else{
       isOpen = false;
-      if (timedRollFuture != null && !timedRollFuture.isDone()) {
-        timedRollFuture.cancel(false); // do not cancel myself if running!
-        timedRollFuture = null;
-      }
-      if (idleFuture != null && !idleFuture.isDone()) {
-      	idleFuture.cancel(false); // do not cancel myself if running!
-      	idleFuture = null;
-      }
+      cancelScheduler();
       LOG.error("Hit max hdfs failed count, ignore the failed file, open new file");
     }
   }
 }
 
-
+private void cancelScheduler(){
+    
+    // NOTE: timed rolls go through this codepath as well as other roll types
+    if (timedRollFuture != null && !timedRollFuture.isDone()) {
+      timedRollFuture.cancel(false); // do not cancel myself if running!
+      timedRollFuture = null;
+    }
+}
   /**
    * flush the data
    * @throws IOException
@@ -368,11 +374,12 @@ private void graceClose() throws IOException, InterruptedException{
             public Void call() throws Exception {
               try {
                 if(isOpen) {
-                  LOG.info("Closing idle bucketWriter {}", bucketPath);
-                  idleClosed = true;
+                  LOG.info("Closing idle bucketWriter {}", bucketPath);                  
                   graceClose();
+                  idleClosed = true;
                 }
                 if(onIdleCallback != null)
+                  LOG.info("Idle callback {}", onIdleCallbackPath);
                   onIdleCallback.run(onIdleCallbackPath);
               } catch(Throwable t) {
                 LOG.error("Unexpected error", t);
